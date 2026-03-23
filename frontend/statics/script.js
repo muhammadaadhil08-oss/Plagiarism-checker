@@ -154,7 +154,9 @@ function renderResult(data) {
     `;
 
     // Reset inputs
-    document.getElementById('hiddenScannerInput').value = "";
+    const hiddenInput = document.getElementById('hiddenScannerInput');
+    if (hiddenInput) hiddenInput.value = "";
+    
     if (document.getElementById('wordCountLabel')) {
         document.getElementById('wordCountLabel').innerText = "0 words, 0 characters";
     }
@@ -260,12 +262,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const filterBtn = document.querySelector('.btn-filter:first-of-type'); // Moved this declaration up
 
     function applyFilters() {
+        if (!historyList) return; // Guard for non-history pages
         const searchTerm = (searchInput ? searchInput.value.toLowerCase() : "");
         const statusFilter = (filterBtn ? filterBtn.getAttribute('data-filter') || 'all' : 'all');
         const fromVal = dateFrom ? dateFrom.value : "";
         const toVal = dateTo ? dateTo.value : "";
 
-        const items = historyList.querySelectorAll('.check-item'); // Changed targetList to historyList
+        const items = historyList.querySelectorAll('.check-item');
         
         items.forEach(item => {
             const title = item.querySelector('.doc-title').innerText.toLowerCase();

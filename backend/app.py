@@ -1,6 +1,8 @@
 import os
 import json
 import uuid
+import tempfile
+import shutil
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 
@@ -30,11 +32,22 @@ def load_credentials():
             return {}
     return {}
 
+def atomic_save_json(filepath, data):
+    """Save JSON atomicaly using a temporary file to prevent corruption and hangs."""
+    fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(filepath))
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+        shutil.move(temp_path, filepath)
+    except Exception as e:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+        print(f"FAILED TO SAVE {filepath}: {e}")
+
 def save_credentials(email, password, name=None):
     creds = load_credentials()
     creds[email] = {'email': email, 'password': password, 'name': name}
-    with open(CREDENTIALS_FILE, 'w') as f:
-        json.dump(creds, f, indent=4)
+    atomic_save_json(CREDENTIALS_FILE, creds)
 
 def get_initials(email, name=None):
     """Calculate initials from name or email."""
@@ -99,13 +112,13 @@ def get_user_history():
     return [item for item in history if item.get('email') == user_email]
 
 def save_history(history):
-    with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-        json.dump(history, f, indent=4)
+    atomic_save_json(HISTORY_FILE, history)
 
 
 @app.route('/')
 def dashboard():
     """Render the main dashboard."""
+    print(f"DEBUG: Entering Dashboard route for user: {session.get('user')}")
     if 'user' not in session:
         return redirect(url_for('login'))
         
@@ -128,15 +141,19 @@ def dashboard():
         else:
             mixed_content += 1
             
-    metrics = {
-        'total': total_analyses,
-        'human': human_written,
-        'ai': ai_detected,
-        'mixed': mixed_content,
-        'human_pct': round((human_written / total_analyses * 100), 1) if total_analyses > 0 else 0,
-        'ai_pct': round((ai_detected / total_analyses * 100), 1) if total_analyses > 0 else 0,
-        'mixed_pct': round((mixed_content / total_analyses * 100), 1) if total_analyses > 0 else 0,
-    }
+    try:
+        metrics = {
+            'total': total_analyses,
+            'human': human_written,
+            'ai': ai_detected,
+            'mixed': mixed_content,
+            'human_pct': round((human_written / total_analyses * 100), 1) if total_analyses > 0 else 0,
+            'ai_pct': round((ai_detected / total_analyses * 100), 1) if total_analyses > 0 else 0,
+            'mixed_pct': round((mixed_content / total_analyses * 100), 1) if total_analyses > 0 else 0,
+        }
+    except Exception as e:
+        print(f"Metric calculation error: {e}")
+        metrics = {'total': 0, 'human': 0, 'ai': 0, 'mixed': 0, 'human_pct': 0, 'ai_pct': 0, 'mixed_pct': 0}
 
     initials = get_initials(session.get('user'), session.get('name'))
     user_email = session.get('user')
@@ -246,7 +263,8 @@ def signup():
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    print(f"DEBUG: Logging out user: {session.get('user')}")
+    session.clear() # Completely clear session for safety
     return redirect(url_for('login'))
 
 @app.route('/new_check')
@@ -261,11 +279,12 @@ def new_check():
 @app.route('/history')
 def history():
     """Render the history page with dynamic data."""
+    print(f"DEBUG: Entering History route for user: {session.get('user')}")
     if 'user' not in session:
         return redirect(url_for('login'))
         
     history_data = get_user_history()
-    initials = get_initials(session.get('user'))
+    initials = get_initials(session.get('user'), session.get('name'))
     user_email = session.get('user')
     
     # Calculate metrics
@@ -372,7 +391,7 @@ def calculate_ai_score(text):
     
     found_buzzwords = sum(1 for w in ai_buzzwords if w in lower_text)
     if found_buzzwords > 0:
-        score += found_buzzwords * 18
+        score += found_buzzwords * 22 # Increased from 18
             
     # 2. Structural Transitions
     transitions = [
@@ -380,7 +399,7 @@ def calculate_ai_score(text):
         "firstly", "in conclusion", "conversely", "furthermore", "moreover"
     ]
     found_trans = sum(1 for t in transitions if t in lower_text)
-    score += found_trans * 25
+    score += found_trans * 30 # Increased from 25
             
     # 3. Sentence Length check
     sentences = re.split(r'[.!?]+', text)
