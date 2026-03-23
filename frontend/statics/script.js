@@ -87,7 +87,8 @@ function renderResult(data) {
     }
 
     // Determine plagiarism level
-    const plagScore = data.web_score;
+    const plagScore = data.history_item ? data.history_item.plagiarism_score : (data.web_score || 0);
+    const aiScore = data.history_item ? data.history_item.ai_score : (data.ai_score || 0);
     // We will adapt the UI badges to represent Plagiarism Uniqueness instead
     
     let colorClass, badgeClass, badgeText, iconBg, iconContent;
@@ -140,10 +141,14 @@ function renderResult(data) {
                 <span class="time">Just Scanned</span>
                 <span class="badge ${badgeClass}">${badgeText}</span>
             </div>
+            <div class="check-score" style="margin-right: 25px;">
+                <span class="score-label">AI Score</span>
+                <span class="score-val orange-val" style="font-size: 1.4rem;">${aiScore}%</span>
+            </div>
             <div class="check-score">
-                <span class="score-label">Plagiarized</span>
-                <span class="score-val ${colorClass}">${plagScore}%</span>
-                <span class="sub-score">Unique: ${100 - plagScore}%</span>
+                <span class="score-label">Plagiarism</span>
+                <span class="score-val ${colorClass}" style="font-size: 1.4rem;">${plagScore}%</span>
+                <span class="sub-score" style="display:block; margin-top:4px;">Unique: ${100 - plagScore}%</span>
             </div>
         </div>
     `;

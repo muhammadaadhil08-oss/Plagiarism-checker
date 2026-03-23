@@ -134,42 +134,35 @@ def _search_bing(query, timeout=4):
 # ─── SIMILARITY ────────────────────────────────────────────────────────
 
 def _compute_snippet_similarity(input_text, snippet):
-    """Compute similarity using SequenceMatcher + n-gram overlap."""
+    """Compute similarity by finding exact phrase matches to detect direct copying."""
     input_norm = re.sub(r'\s+', ' ', input_text.lower().strip())
     snippet_norm = re.sub(r'\s+', ' ', snippet.lower().strip())
 
-    if len(snippet_norm) < 20:
-        return 0.0
-
-    # SequenceMatcher ratio
-    ratio = SequenceMatcher(None, input_norm, snippet_norm).ratio()
-
-    # N-gram overlap (3-word phrases)
     input_words = input_norm.split()
     snippet_words = snippet_norm.split()
 
+    if len(snippet_words) < 5:
+        return 0.0
+
+    # Strong exact phrase matches (15, 10, or 6 words in a row)
+    for length, weight in [(15, 1.0), (10, 0.75), (6, 0.45)]:
+        if len(snippet_words) >= length:
+            for i in range(len(snippet_words) - length + 1):
+                phrase = ' '.join(snippet_words[i:i+length])
+                if phrase in input_norm:
+                    return weight
+
+    # Fallback to n-gram overlap within the snippet
     if len(input_words) >= 3 and len(snippet_words) >= 3:
-        input_ngrams = set()
-        for i in range(len(input_words) - 2):
-            input_ngrams.add(' '.join(input_words[i:i+3]))
-
-        snippet_ngrams = set()
-        for i in range(len(snippet_words) - 2):
-            snippet_ngrams.add(' '.join(snippet_words[i:i+3]))
-
-        if input_ngrams:
+        input_ngrams = set(' '.join(input_words[i:i+3]) for i in range(len(input_words)-2))
+        snippet_ngrams = set(' '.join(snippet_words[i:i+3]) for i in range(len(snippet_words)-2))
+        
+        if snippet_ngrams:
             overlap = len(input_ngrams & snippet_ngrams)
-            ngram_ratio = overlap / len(input_ngrams)
-            ratio = max(ratio, ngram_ratio)
+            ratio = overlap / len(snippet_ngrams)
+            return min(0.35, ratio) # Max 35% if just scattered random words matching
 
-    # Exact 5-word phrase match boost
-    for i in range(len(input_words) - 4):
-        phrase = ' '.join(input_words[i:i+5])
-        if phrase in snippet_norm:
-            ratio = max(ratio, 0.55)
-            break
-
-    return ratio
+    return 0.0
 
 
 # ─── MAIN SEARCH FUNCTION ─────────────────────────────────────────────
@@ -279,7 +272,7 @@ def search_web(text, num_queries=2, timeout=4):
     # Check similarity
     for snippet in all_snippets:
         sim = _compute_snippet_similarity(text, snippet)
-        if sim > 0.12:
+        if sim > 0.15:
             max_similarity = max(max_similarity, sim)
 
     # Build source list with best matching snippet per URL
