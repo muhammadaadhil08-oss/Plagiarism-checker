@@ -1,5 +1,17 @@
 [
     {
+        "id": "43ad4cf2-8c1b-418d-9710-340c6bb7a425",
+        "email": null,
+        "title": "test.pdf",
+        "date": "March 23, 2026",
+        "time": "06:04 PM",
+        "iso_date": "2026-03-23",
+        "word_count": 86,
+        "plagiarism_score": 36,
+        "ai_score": 60,
+        "text": "Social media has become a big part of everyday life, especially for young people. Many students use platforms like Instagram or messaging apps to talk with friends, share photos, and watch videos. While social media is useful for communication, it can also become distracting. Some students spend too much time scrolling through posts instead of focusing on their studies. Because of this, it is important to use social media in a balanced way. When used properly, it can help people stay connected and share information quickly."
+    },
+    {
         "id": "5f010e9a-01d1-4ef9-b21f-12019e9700f8",
         "title": "Pasted Text",
         "date": "March 23, 2026",

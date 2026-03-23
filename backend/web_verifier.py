@@ -31,7 +31,7 @@ HEADERS = {
 
 # ─── SEARCH ENGINES ────────────────────────────────────────────────────
 
-def _search_duckduckgo(query, timeout=10):
+def _search_duckduckgo(query, timeout=4):
     """Search DuckDuckGo HTML (more permissive than Google)."""
     search_url = 'https://html.duckduckgo.com/html/?' + urllib.parse.urlencode({
         'q': query,
@@ -87,7 +87,7 @@ def _search_duckduckgo(query, timeout=10):
     return snippets[:15], urls[:8]
 
 
-def _search_bing(query, timeout=10):
+def _search_bing(query, timeout=4):
     """Search Bing as fallback."""
     search_url = 'https://www.bing.com/search?' + urllib.parse.urlencode({
         'q': query,
@@ -174,10 +174,11 @@ def _compute_snippet_similarity(input_text, snippet):
 
 # ─── MAIN SEARCH FUNCTION ─────────────────────────────────────────────
 
-def search_web(text, num_queries=3, timeout=10):
+def search_web(text, num_queries=2, timeout=4):
     """
     Search the web for the given text to verify originality.
     Uses DuckDuckGo (primary) with Bing fallback.
+    Reduced queries to 2 and timeout to 4s to prevent Gunicorn 30-sec worker timeout.
 
     Args:
         text: The text to verify
