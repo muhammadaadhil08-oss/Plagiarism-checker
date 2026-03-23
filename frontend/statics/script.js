@@ -59,13 +59,23 @@ function triggerScan() {
     if (scanButton) scanButton.disabled = true;
     if (overlay) overlay.style.display = "block";
 
+    // Capture user's local time for accurate history display
+    const localNow = new Date();
+    const localDate = localNow.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    const localTime = localNow.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
     // Call the Plagiarism API
     fetch('/plagiarism', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: text, filename: filename })
+        body: JSON.stringify({ 
+            text: text, 
+            filename: filename,
+            local_date: localDate,
+            local_time: localTime 
+        })
     })
     .then(response => response.json())
     .then(data => {

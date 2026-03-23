@@ -470,14 +470,23 @@ def check_plagiarism():
         ai_score = calculate_ai_score(text)
         
         word_count = len(text.split())
+        
+        # Priority: Client provided local time, then server fallback
+        date_str = data.get('local_date')
+        time_str = data.get('local_time')
         now = datetime.now()
         
+        if not date_str:
+            date_str = now.strftime("%B %d, %Y")
+        if not time_str:
+            time_str = now.strftime("%I:%M %p")
+            
         history_item = {
             'id': str(uuid.uuid4()),
             'email': session.get('user'),
             'title': filename,
-            'date': now.strftime("%B %d, %Y"),
-            'time': now.strftime("%I:%M %p"),
+            'date': date_str,
+            'time': time_str,
             'iso_date': now.strftime("%Y-%m-%d"),
             'word_count': word_count,
             'plagiarism_score': plag_score,
