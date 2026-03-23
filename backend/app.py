@@ -3,6 +3,7 @@ import json
 import uuid
 import tempfile
 import shutil
+import time
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 
@@ -19,17 +20,27 @@ app = Flask(__name__,
             static_folder=os.path.join(frontend_dir, 'statics'))
 app.secret_key = 'your-secret-key-here' # In a real app, use a secure random key
 
+# Global Cache for performance
+_credentials_cache = {"data": {}, "mtime": 0}
+_history_cache = {"data": [], "mtime": 0}
+
 def load_credentials():
-    if os.path.exists(CREDENTIALS_FILE):
-        try:
+    global _credentials_cache
+    try:
+        current_mtime = os.path.getmtime(CREDENTIALS_FILE) if os.path.exists(CREDENTIALS_FILE) else 0
+        if _credentials_cache["mtime"] == current_mtime:
+            return _credentials_cache["data"]
+            
+        if os.path.exists(CREDENTIALS_FILE):
             with open(CREDENTIALS_FILE, 'r') as f:
                 data = json.load(f)
                 # Migration: if old single-user format is found, wrap it
                 if 'email' in data and isinstance(data.get('email'), str) and 'password' in data:
-                    return {data['email']: data}
+                    data = {data['email']: data}
+                _credentials_cache = {"data": data, "mtime": current_mtime}
                 return data
-        except:
-            return {}
+    except Exception as e:
+        print(f"Creds Load Error: {e}")
     return {}
 
 def atomic_save_json(filepath, data):
@@ -79,37 +90,43 @@ def get_initials(email, name=None):
     return parts[0][0].upper()
 
 def load_history():
-    if not os.path.exists(HISTORY_FILE):
-        return []
+    global _history_cache
     try:
-        with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
+        current_mtime = os.path.getmtime(HISTORY_FILE) if os.path.exists(HISTORY_FILE) else 0
+        if _history_cache["mtime"] == current_mtime:
+            return _history_cache["data"]
+            
+        if os.path.exists(HISTORY_FILE):
+            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                _history_cache = {"data": data, "mtime": current_mtime}
+                return data
+    except Exception as e:
+        print(f"History Load Error: {e}")
+    return []
 
 def get_user_history():
-    """Load history and filter by logged-in user."""
+    """Load history and filter by logged-in user. (In-memory iso_date fix for performance)"""
     history = load_history()
     user_email = session.get('user')
-    updated = False
-    for item in history:
-        if 'iso_date' not in item:
-            try:
-                # Convert "March 15, 2026" to "2026-03-15"
-                dt = datetime.strptime(item.get('date', ''), "%B %d, %Y")
-                item['iso_date'] = dt.strftime("%Y-%m-%d")
-                updated = True
-            except:
-                item['iso_date'] = ""
     
-    if updated:
-        save_history(history)
-        
     if not user_email:
         return []
+
+    processed = []
+    for item in history:
+        # Create a lightweight copy for view-only processing to avoid changing global cache
+        view_item = item.copy()
+        if 'iso_date' not in view_item:
+            try:
+                dt = datetime.strptime(view_item.get('date', ''), "%B %d, %Y")
+                view_item['iso_date'] = dt.strftime("%Y-%m-%d")
+            except:
+                view_item['iso_date'] = ""
+        processed.append(view_item)
     
     # Filter strictly by logged-in user email
-    return [item for item in history if item.get('email') == user_email]
+    return [item for item in processed if item.get('email') == user_email]
 
 def save_history(history):
     atomic_save_json(HISTORY_FILE, history)
