@@ -4,7 +4,7 @@ import uuid
 import tempfile
 import shutil
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 
 # Import the custom analysis modules (Only plagiarism is kept)
@@ -283,6 +283,25 @@ def logout():
     print(f"DEBUG: Logging out user: {session.get('user')}")
     session.clear() # Completely clear session for safety
     return redirect(url_for('login'))
+
+@app.route('/api/admin/migrate-times')
+def migrate_times():
+    """One-time route to shift existing history items by +5.5 hours for IST."""
+    history = load_history()
+    updated_count = 0
+    for item in history:
+        if item.get('iso_date') == "2026-03-23":
+            try:
+                time_str = item.get('time')
+                dt = datetime.strptime(time_str, "%I:%M %p")
+                new_dt = dt + timedelta(hours=5, minutes=30)
+                item['time'] = new_dt.strftime("%I:%M %p")
+                updated_count += 1
+            except:
+                pass
+    if updated_count > 0:
+        save_history(history)
+    return jsonify({"status": "success", "migrated": updated_count})
 
 @app.route('/new_check')
 def new_check():
