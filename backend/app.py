@@ -62,15 +62,16 @@ def load_history():
     except:
         return []
 
-def get_history():
-    """Load history and ensure all items have iso_date for filtering."""
+def get_user_history():
+    """Load history and filter by logged-in user."""
     history = load_history()
+    user_email = session.get('user')
     updated = False
     for item in history:
         if 'iso_date' not in item:
             try:
                 # Convert "March 15, 2026" to "2026-03-15"
-                dt = datetime.strptime(item['date'], "%B %d, %Y")
+                dt = datetime.strptime(item.get('date', ''), "%B %d, %Y")
                 item['iso_date'] = dt.strftime("%Y-%m-%d")
                 updated = True
             except:
@@ -78,7 +79,12 @@ def get_history():
     
     if updated:
         save_history(history)
-    return history
+        
+    if not user_email:
+        return []
+    
+    # Filter strictly by logged-in user email
+    return [item for item in history if item.get('email') == user_email]
 
 def save_history(history):
     with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
@@ -91,7 +97,7 @@ def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
         
-    history_data = get_history()
+    history_data = get_user_history()
     recent_checks = history_data[:5] # Get last 5 checks
     
     # Calculate metrics
@@ -121,7 +127,8 @@ def dashboard():
     }
 
     initials = get_initials(session.get('user'), session.get('name'))
-    return render_template('index.html', recent_checks=recent_checks, metrics=metrics, initials=initials)
+    user_email = session.get('user')
+    return render_template('index.html', recent_checks=recent_checks, metrics=metrics, initials=initials, user_email=user_email)
 
 import random
 
@@ -233,7 +240,8 @@ def new_check():
     if 'user' not in session:
         return redirect(url_for('login'))
     initials = get_initials(session.get('user'))
-    return render_template('new_check.html', initials=initials)
+    user_email = session.get('user')
+    return render_template('new_check.html', initials=initials, user_email=user_email)
 
 @app.route('/history')
 def history():
@@ -241,8 +249,9 @@ def history():
     if 'user' not in session:
         return redirect(url_for('login'))
         
-    history_data = load_history()
+    history_data = get_user_history()
     initials = get_initials(session.get('user'))
+    user_email = session.get('user')
     
     # Calculate metrics
     total_analyses = len(history_data)
@@ -267,7 +276,7 @@ def history():
         'mixed': mixed_content
     }
             
-    return render_template('history.html', history=history_data, metrics=metrics, initials=initials)
+    return render_template('history.html', history=history_data, metrics=metrics, initials=initials, user_email=user_email)
 
 import re
 from collections import Counter
@@ -439,6 +448,7 @@ def check_plagiarism():
         
         history_item = {
             'id': str(uuid.uuid4()),
+            'email': session.get('user'),
             'title': filename,
             'date': now.strftime("%B %d, %Y"),
             'time': now.strftime("%I:%M %p"),
@@ -463,7 +473,8 @@ def check_plagiarism():
 # --- HISTORY API ROUTES ---
 @app.route('/api/history/<item_id>', methods=['GET'])
 def get_history_item(item_id):
-    history_data = load_history()
+    if 'user' not in session: return jsonify({'error': 'Unauthorized'}), 401
+    history_data = get_user_history()
     for item in history_data:
         if item.get('id') == item_id:
             return jsonify(item)
@@ -471,13 +482,17 @@ def get_history_item(item_id):
 
 @app.route('/api/history/<item_id>', methods=['DELETE'])
 def delete_history_item(item_id):
+    if 'user' not in session: return jsonify({'error': 'Unauthorized'}), 401
     history_data = load_history()
-    initial_len = len(history_data)
-    history_data = [item for item in history_data if item.get('id') != item_id]
+    user_email = session.get('user')
     
-    if len(history_data) < initial_len:
-        save_history(history_data)
-        return jsonify({'success': True})
-    return jsonify({'error': 'Not found'}), 404
+    # Verify ownership before deleting
+    target_item = next((item for item in history_data if item.get('id') == item_id), None)
+    if not target_item or target_item.get('email') != user_email:
+        return jsonify({'error': 'Not found or unauthorized'}), 404
+        
+    history_data = [item for item in history_data if item.get('id') != item_id]
+    save_history(history_data)
+    return jsonify({'success': True})
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=8001)

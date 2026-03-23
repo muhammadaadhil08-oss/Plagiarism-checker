@@ -31,8 +31,9 @@
             <a href="/history" class="active">History</a>
         </nav>
 
-        <div class="profile-area">
-            <div class="avatar">{{ initials }}</div>
+        <div class="profile-area" style="display: flex; align-items: center; gap: 12px;">
+            <span class="user-email-display" style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">{{ user_email }}</span>
+            <div class="avatar" title="{{ user_email }}">{{ initials }}</div>
             <a href="/logout" class="logout-icon" title="Logout">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
