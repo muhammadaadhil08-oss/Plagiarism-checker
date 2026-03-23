@@ -321,72 +321,91 @@ def calculate_repetition_score(text):
 
 def calculate_ai_score(text):
     """
-    Heuristic-based AI detection:
-    - Reduce sensitivity
-    - Long sentences increase score
-    - Formal words increase score
-    - Human pronouns decrease score
+    Robust Heuristic-based AI detection:
+    - Highly sensitive to ChatGPT buzzwords
+    - Analyzes sentence length and variance
+    - Detects typical AI structural transitions
     """
     if not text:
         return 0
         
-    # Normalize for word counting (remove punctuation for consistent matching)
-    clean_text = re.sub(r'[^\w\s]', ' ', text.lower())
+    lower_text = text.lower()
+    clean_text = re.sub(r'[^\w\s]', ' ', lower_text)
     words = clean_text.split()
     total_words = len(words)
-    if total_words < 10:
-        return 5 # Neutral low score for very short text
-        
-    score = 15 # Starting base score (reduced sensitivity)
     
-    # 1. Sentence Length check
+    if total_words < 10:
+        return 5
+        
+    score = 20 # Base AI score
+    
+    # 1. AI Buzzwords & Cliches
+    ai_buzzwords = [
+        "delve", "crucial", "essential", "landscape", "pivotal", "underscore", 
+        "seamlessly", "realm", "multifaceted", "moreover", "testament", "tapestry",
+        "furthermore", "additionally", "consequently", "therefore", "thus", 
+        "vital", "intricate", "paradigm", "foster", "robust", "meticulously",
+        "navigate", "ultimately", "dynamic", "evolving", "in conclusion", 
+        "synergy", "comprehensive", "notably", "significantly", "optimal",
+        "holistic", "empower", "leverage", "nuanced", "imperative", "cornerstone"
+    ]
+    
+    found_buzzwords = 0
+    for word in ai_buzzwords:
+        if " " in word:
+            count = lower_text.count(word)
+        else:
+            count = words.count(word)
+        if count > 0:
+            score += count * 15 # Heavy penalty for AI buzzwords
+            found_buzzwords += count
+            
+    # 2. Structural Transitions
+    transitions = [
+        "it is important to note",
+        "to summarize",
+        "in summary",
+        "overall",
+        "conversely"
+    ]
+    for trans in transitions:
+        count = lower_text.count(trans)
+        if count > 0:
+            score += count * 20
+            
+    # 3. Sentence Length check
     sentences = re.split(r'[.!?]+', text)
     sentences = [s.strip() for s in sentences if s.strip()]
     if sentences:
         avg_len = total_words / len(sentences)
-        # AI often writes consistently long sentences
-        if avg_len > 18:
-            score += (avg_len - 18) * 4
-        elif avg_len < 10:
-            score -= 10 # Very short sentences feel human
+        # AI often writes consistently around 10-30 words per sentence
+        if 10 < avg_len < 30:
+            score += 15
+        elif avg_len < 8:
+            score -= 10 # Very short punchy text feels human
             
-    # 2. Formal Words (Increase score)
-    formal_words = ["therefore", "moreover", "consequently", "furthermore", "additionally", 
-                    "nevertheless", "nonetheless", "notwithstanding", "accordingly", "thus"]
-    found_formal = 0
-    for word in formal_words:
-        if word in words:
-            count = words.count(word)
-            score += count * 10
-            found_formal += count
+    # 4. Human Pronouns (Decrease score sparingly)
+    human_words = ["i", "my", "me", "myself"]
+    human_count = sum(words.count(w) for w in human_words)
+    if human_count > 0:
+        # Cap the penalty so highly personal essays don't drop symmetrically to 0%
+        score -= min(10, human_count * 2)
             
-    # 3. Human Pronouns (Decrease score)
-    human_words = ["i", "my", "me", "we", "our", "us", "myself", "ourselves", "you"]
-    for word in human_words:
-        if word in words:
-            # Multiplier for pronouns is high to reduce sensitivity
-            score -= words.count(word) * 12
-            
-    # 4. Sentence Level Variation
+    # 5. Sentence Level Variation
     if len(sentences) > 2:
         lengths = [len(s.split()) for s in sentences]
         avg = sum(lengths) / len(lengths)
         variance = sum((l - avg)**2 for l in lengths) / len(lengths)
         # Low variance (uniform lengths) -> Higher AI score
-        if variance < 10:
-            score += 20
-        elif variance > 40:
-            score -= 15
+        if variance < 20:
+            score += 25
             
-    # Apply a boost if multiple formal signals are present
-    if found_formal >= 3:
+    # Huge boost if multiple formal signals are present
+    if found_buzzwords >= 2:
         score += 20
 
     # Clamp results to 0-100
     final_score = max(0, min(100, round(score)))
-    
-    # If the score is high, it's very likely AI
-    # If the score is low, it's very likely human
     return final_score
 
 # --- PLAGIARISM CHECKER ROUTE ---

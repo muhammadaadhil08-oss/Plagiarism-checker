@@ -71,7 +71,7 @@
                     </div>
                 </div>
                 <h2>{{ metrics.ai_pct }}%</h2>
-                <p>AI Detected</p>
+                <p>Flagged Content</p>
             </div>
 
             <div class="metric-card">
@@ -125,8 +125,12 @@
                     <div class="check-info">
                         <h4>{{ check.title }}</h4>
                         <span class="time">{{ check.date }} at {{ check.time }}</span>
-                        {% if ai_score > 60 or plag_score > 60 %}
-                            <span class="badge badge-red">AI/Plag Detected</span>
+                        {% if ai_score > 60 and plag_score > 60 %}
+                            <span class="badge badge-red">Highly Unoriginal</span>
+                        {% elif ai_score > 60 %}
+                            <span class="badge badge-red">AI Detected</span>
+                        {% elif plag_score > 60 %}
+                            <span class="badge badge-red">Plagiarized</span>
                         {% elif ai_score < 20 and plag_score < 20 %}
                             <span class="badge badge-green">Human Written</span>
                         {% else %}

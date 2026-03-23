@@ -109,7 +109,7 @@
 
             <div class="hm-card">
                 <div class="hm-info">
-                    <span class="hm-title">AI Detected</span>
+                    <span class="hm-title">Flagged Content</span>
                     <h2 class="hm-value red-val">{{ metrics.ai }}</h2>
                 </div>
                 <div class="hm-icon-box red-bg">
@@ -147,9 +147,33 @@
                 {% set plag_val = item.plagiarism_score %}
                 {% set ai_val = item.ai_score %}
 
-                {% if ai_val > 60 or plag_val > 60 %}
+                {% if ai_val > 60 and plag_val > 60 %}
+                {% set badge_class = "badge-red" %}
+                {% set badge_text = "Highly Unoriginal" %}
+                {% set icon_bg = "red-icon" %}
+                {% set icon_svg = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>' %}
+                {% set ai_color = "red-val" %}
+                {% elif ai_val > 60 %}
                 {% set badge_class = "badge-red" %}
                 {% set badge_text = "AI Detected" %}
+                {% set icon_bg = "red-icon" %}
+                {% set icon_svg = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>' %}
+                {% set ai_color = "red-val" %}
+                {% elif plag_val > 60 %}
+                {% set badge_class = "badge-red" %}
+                {% set badge_text = "Plagiarized" %}
                 {% set icon_bg = "red-icon" %}
                 {% set icon_svg = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2">
