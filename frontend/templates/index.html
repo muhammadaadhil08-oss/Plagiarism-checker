@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Plagiarism Checker</title>
+    <!-- Google Fonts for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/statics/style.css">
+</head>
+<body class="dashboard-body">
+
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+        <div class="logo-area">
+            <div class="logo-box">
+                <img src="/statics/plagiarism_logo.svg" alt="Plagiarism Checker Logo" style="height: 32px; width: auto;">
+            </div>
+            <h2>Plagiarism Checker</h2>
+        </div>
+
+        <nav class="nav-links">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/new_check">New Check</a>
+            <a href="/history">History</a>
+        </nav>
+
+        <div class="profile-area">
+            <div class="avatar">{{ initials }}</div>
+            <a href="/logout" class="logout-icon" title="Logout">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <!-- Greetings -->
+        <section class="greeting">
+            <h1>Welcome back, Professor! 👋</h1>
+            <p>Track AI usage in student assignments and detect plagiarism.</p>
+        </section>
+
+        <!-- Metric Cards Grid -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-top">
+                    <div class="icon-box purple-bg">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                </div>
+                <h2>{{ metrics.total }}</h2>
+                <p>Assignments Checked</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-top">
+                    <div class="icon-box green-bg">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                </div>
+                <h2>{{ metrics.human_pct }}%</h2>
+                <p>Unique Content</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-top">
+                    <div class="icon-box orange-bg">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                </div>
+                <h2>{{ metrics.ai_pct }}%</h2>
+                <p>AI Detected</p>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-top">
+                    <div class="icon-box blue-bg">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                </div>
+                <h2>{{ metrics.mixed_pct }}%</h2>
+                <p>Mixed Content</p>
+            </div>
+        </section>
+
+        <!-- Main Banner -->
+        <section class="action-banner gradient-banner">
+            <h2>Check Student Assignment</h2>
+            <p>Upload student assignments to detect AI-generated content and plagiarism. Our advanced AI detection analyzes writing patterns, style consistency, and originality.</p>
+            <div class="action-container" style="display:flex; gap:10px; margin-top:20px;">
+                 <a href="/new_check" style="text-decoration:none;">
+                     <button class="btn-start">
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px; vertical-align:middle;"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                         Start Analysis
+                     </button>
+                 </a>
+            </div>
+        </section>
+
+        <!-- Recent Checks List -->
+        <section class="recent-checks">
+            <div class="section-header">
+                <h3>Recent Checks</h3>
+                <a href="#" class="view-all"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> View All</a>
+            </div>
+
+            <div class="checks-list" id="checksList">
+                
+                {% for check in recent_checks %}
+                <div class="check-item">
+                    {% set plag_score = check.plagiarism_score|default(0) %}
+                    {% set ai_score = check.ai_score|default(0) %}
+                    
+                    {% if ai_score > 60 or plag_score > 60 %}
+                        <div class="check-icon red-icon">
+                    {% elif ai_score < 20 and plag_score < 20 %}
+                        <div class="check-icon green-icon">
+                    {% else %}
+                        <div class="check-icon orange-icon">
+                    {% endif %}
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <div class="check-info">
+                        <h4>{{ check.title }}</h4>
+                        <span class="time">{{ check.date }} at {{ check.time }}</span>
+                        {% if ai_score > 60 or plag_score > 60 %}
+                            <span class="badge badge-red">AI/Plag Detected</span>
+                        {% elif ai_score < 20 and plag_score < 20 %}
+                            <span class="badge badge-green">Human Written</span>
+                        {% else %}
+                            <span class="badge badge-orange">Mixed Content</span>
+                        {% endif %}
+                    </div>
+                    <div class="check-score">
+                        <span class="score-label">AI Score</span>
+                        <span class="score-val {% if ai_score > 60 %}red-val{% elif ai_score < 20 %}green-val{% else %}orange-val{% endif %}">{{ ai_score }}%</span>
+                        <span class="sub-score">Plagiarism: {{ plag_score }}%</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="check-item" style="justify-content: center; color: var(--text-secondary);">
+                    No checks performed yet.
+                </div>
+                {% endfor %}
+
+            </div>
+        </section>
+    </main>
+
+    <script src="/statics/script.js"></script>
+</body>
+</html>

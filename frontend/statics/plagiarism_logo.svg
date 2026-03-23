@@ -1,0 +1,19 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stacked Papers -->
+  <rect x="14" y="10" width="34" height="42" rx="3" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
+  <rect x="18" y="6" width="34" height="42" rx="3" fill="white" stroke="#64748B" stroke-width="2"/>
+  
+  <!-- Paper Lines -->
+  <path d="M24 16H42" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+  <path d="M24 22H42" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+  <path d="M24 28H32" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Magnifying Glass -->
+  <circle cx="44" cy="40" r="14" fill="white" stroke="#2563EB" stroke-width="3"/>
+  <path d="M54 50L60 56" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+  <path d="M54 50L58 54" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Red Exclamation Mark -->
+  <path d="M44 34V42" stroke="#EF4444" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="44" cy="46" r="1.5" fill="#EF4444"/>
+</svg>
