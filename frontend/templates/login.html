@@ -301,7 +301,15 @@
             if (document.getElementById('loginForm').style.display === 'none') {
                 toggleAuthMode();
             }
-            document.getElementById('email').focus();
+            const emailInput = document.getElementById('email');
+            emailInput.focus();
+            // Flash the email input container to draw mobile user attention
+            if(emailInput.parentElement) {
+                const origBoxShadow = emailInput.parentElement.style.boxShadow;
+                emailInput.parentElement.style.transition = 'box-shadow 0.3s ease';
+                emailInput.parentElement.style.boxShadow = '0 0 0 2px var(--accent-primary)';
+                setTimeout(() => { emailInput.parentElement.style.boxShadow = origBoxShadow; }, 800);
+            }
         }
 
         function googleLogin(email, name) {

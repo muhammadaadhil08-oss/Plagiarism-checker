@@ -31,8 +31,7 @@
             <a href="/history" class="active">History</a>
         </nav>
 
-        <div class="profile-area" style="display: flex; align-items: center; gap: 12px;">
-            <span class="user-email-display" style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">{{ user_email }}</span>
+        <div class="profile-area">
             <div class="avatar" title="{{ user_email }}">{{ initials }}</div>
             <a href="/logout" class="logout-icon" title="Logout">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -235,7 +234,7 @@
                             </svg>
                             View
                         </button>
-                        <button class="btn-action icon-btn">
+                        <button class="btn-action icon-btn" onclick="downloadReport('{{ item.id }}')" title="Download Report">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -287,6 +286,45 @@
         </div>
     </div>
 
+    <script>
+    async function downloadReport(itemId) {
+        try {
+            const response = await fetch(`/api/history/${itemId}`);
+            const data = await response.json();
+            if (data.error) {
+                alert('Report not found');
+                return;
+            }
+            
+            const content = `================================================
+PLAGIARISM & AI ANALYSIS REPORT
+================================================
+Document Title: ${data.title}
+Date: ${data.date} at ${data.time}
+Word Count: ${data.word_count}
+
+--- SCORES ---
+AI Score: ${data.ai_score}%
+Plagiarism Score: ${data.plagiarism_score}%
+
+--- CONTENT ---
+${data.text}
+================================================`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `Analysis_${data.title.replace(/\\s+/g, '_')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            alert('Failed to download report.');
+        }
+    }
+    </script>
     <script src="/statics/script.js"></script>
 </body>
 

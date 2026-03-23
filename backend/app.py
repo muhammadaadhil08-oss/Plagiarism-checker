@@ -29,6 +29,9 @@ def save_credentials(email, password, name=None):
 
 def get_initials(email, name=None):
     """Calculate initials from name or email."""
+    if email == "nmuhammadaadhil0@gmail.com": return "MA"
+    if email == "shierkaadhil0@gmail.com": return "SA"
+        
     source = name if name else email
     if not source:
         return "U"
