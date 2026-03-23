@@ -19,13 +19,22 @@ app.secret_key = 'your-secret-key-here' # In a real app, use a secure random key
 
 def load_credentials():
     if os.path.exists(CREDENTIALS_FILE):
-        with open(CREDENTIALS_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(CREDENTIALS_FILE, 'r') as f:
+                data = json.load(f)
+                # Migration: if old single-user format is found, wrap it
+                if 'email' in data and isinstance(data.get('email'), str) and 'password' in data:
+                    return {data['email']: data}
+                return data
+        except:
+            return {}
     return {}
 
 def save_credentials(email, password, name=None):
+    creds = load_credentials()
+    creds[email] = {'email': email, 'password': password, 'name': name}
     with open(CREDENTIALS_FILE, 'w') as f:
-        json.dump({'email': email, 'password': password, 'name': name}, f, indent=4)
+        json.dump(creds, f, indent=4)
 
 def get_initials(email, name=None):
     """Calculate initials from name or email."""
@@ -169,9 +178,10 @@ def login():
                 return jsonify({'status': 'success', 'redirect': url_for('dashboard')})
             
             # Validate against stored credentials
-            if email == creds.get('email') and password == creds.get('password'):
+            user_cred = creds.get(email)
+            if user_cred and password == user_cred.get('password'):
                 session['user'] = email
-                session['name'] = creds.get('name')
+                session['name'] = user_cred.get('name')
                 return jsonify({'status': 'success', 'redirect': url_for('dashboard')})
             else:
                 return jsonify({'status': 'error', 'message': 'Invalid email or password.'}), 401
@@ -196,8 +206,9 @@ def forgot_password():
     email = request.form.get('email')
     new_password = request.form.get('new_password')
     creds = load_credentials()
-    if email == creds.get('email'):
-        save_credentials(email, new_password, creds.get('name'))
+    user_cred = creds.get(email)
+    if user_cred:
+        save_credentials(email, new_password, user_cred.get('name'))
         return jsonify({'status': 'success', 'message': 'Password reset successful.'})
     return jsonify({'status': 'error', 'message': 'Email not found.'}), 404
 
@@ -209,7 +220,8 @@ def reset_password():
     
     if email in otp_storage and otp_storage[email]['otp'] == otp:
         creds = load_credentials()
-        save_credentials(email, new_password, creds.get('name'))
+        user_cred = creds.get(email, {})
+        save_credentials(email, new_password, user_cred.get('name'))
         otp_storage.pop(email)
         return jsonify({'status': 'success', 'message': 'Password reset successful.'})
     return jsonify({'status': 'error', 'message': 'Invalid OTP.'}), 400

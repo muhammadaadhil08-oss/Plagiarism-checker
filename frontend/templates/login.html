@@ -119,14 +119,25 @@
 
     <script>
         function saveAccountToLocalStorage(email, name) {
-            let accounts = JSON.parse(localStorage.getItem('saved_accounts')) || [];
-            const existing = accounts.find(a => a.email === email);
-            if (!name && existing) name = existing.name;
-            if (!name) name = email.split('@')[0];
-            
-            accounts = accounts.filter(a => a.email !== email);
-            accounts.unshift({ email, name });
-            localStorage.setItem('saved_accounts', JSON.stringify(accounts));
+            try {
+                let accounts = [];
+                try {
+                    let raw = localStorage.getItem('saved_accounts');
+                    if (raw) accounts = JSON.parse(raw);
+                } catch(e) { accounts = []; }
+                
+                if (!Array.isArray(accounts)) accounts = [];
+                
+                const existing = accounts.find(a => a && a.email === email);
+                if (!name && existing) name = existing.name;
+                if (!name) name = email.split('@')[0];
+                
+                accounts = accounts.filter(a => a && a.email !== email);
+                accounts.unshift({ email, name });
+                localStorage.setItem('saved_accounts', JSON.stringify(accounts));
+            } catch(err) {
+                console.error("LocalStorage save failed:", err);
+            }
         }
         
         function togglePassword() {
@@ -260,7 +271,12 @@
 
         function showGooglePicker() {
             const listDiv = document.getElementById('dynamicAccountList');
-            let accounts = JSON.parse(localStorage.getItem('saved_accounts')) || [];
+            let accounts = [];
+            try {
+                let raw = localStorage.getItem('saved_accounts');
+                if (raw) accounts = JSON.parse(raw);
+                if (!Array.isArray(accounts)) accounts = [];
+            } catch(e) { accounts = []; }
             
             let html = '';
             if (accounts.length > 0) {
